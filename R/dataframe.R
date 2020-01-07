@@ -16,7 +16,7 @@ add_rownames <- function(df, var = "rowname") {
     call. = FALSE
   )
 
-  stopifnot(is.data.frame(df))
+  abort_if_not(is.data.frame(df))
 
   rn <- as_tibble(setNames(list(rownames(df)), var))
   rownames(df) <- NULL
