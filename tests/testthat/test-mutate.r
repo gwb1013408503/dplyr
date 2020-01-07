@@ -834,7 +834,7 @@ test_that("mutate() give meaningful errors", {
 
   df <- tibble(g = c(1, 1, 2, 2, 2), x = 1:5)
 
-  verify_output(test_path("test-mutate.txt"), {
+  verify_output(test_path("test-mutate-errors.txt"), {
     "# setting column to NULL makes it unavailable"
     tbl %>%
       mutate(y = NULL, a = sum(y))
