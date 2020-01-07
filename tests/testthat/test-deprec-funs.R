@@ -101,7 +101,6 @@ test_that("as_fun_list() auto names chr vectors (4307)", {
 # Errors ------------------------------------------------------------------
 
 test_that("funs() give meaningful error messages", {
-  scoped_lifecycle_silence()
   verify_output(test_path("test-deprec-funs-errors.txt"), {
     funs(function(si) { mp[si] })
     funs(~mp[.])
