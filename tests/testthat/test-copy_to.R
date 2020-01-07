@@ -6,62 +6,9 @@ test_that("src_local only overwrites if overwrite = TRUE", {
 
   src_env <- src_df(env = env)
 
-  expect_error(
-    copy_to(src_env, tibble(x = 1), name = "x"),
-    "object with `name` = `x` must not already exist, unless `overwrite` = TRUE",
-    fixed = TRUE
-  )
-
   df <- tibble(x = 1)
   copy_to(src_env, df, name = "x", overwrite = TRUE)
   expect_equal(env$x, df)
-})
-
-test_that("src_local errs with pkg/env", {
-  expect_error(
-    src_df("base", new.env()),
-    "Exactly one of `pkg` and `env` must be non-NULL, not 2",
-    fixed = TRUE
-  )
-
-  expect_error(
-    src_df(),
-    "Exactly one of `pkg` and `env` must be non-NULL, not 0",
-    fixed = TRUE
-  )
-})
-
-test_that("auto_copy() requires same source", {
-  skip_if_not_installed("dbplyr")
-
-  env <- new.env(parent = emptyenv())
-  env$iris <- iris
-  src_iris <- src_df(env = env)
-
-  src_mtcars <- src_sqlite(":memory:", create = TRUE)
-  copy_to(src_mtcars, mtcars, "mtcars")
-
-  expect_error(
-    auto_copy(tbl(src_iris, "iris"), src_mtcars, name = "iris"),
-    "`x` and `y` must share the same src, set `copy` = TRUE (may be slow)",
-    fixed = TRUE
-  )
-
-  expect_error(
-    auto_copy(tbl(src_mtcars, "mtcars"), src_iris, name = "mtcars"),
-    "`x` and `y` must share the same src, set `copy` = TRUE (may be slow)",
-    fixed = TRUE
-  )
-})
-
-test_that("src_sqlite() errs if path does not exist", {
-  skip_if_not_installed("dbplyr")
-
-  expect_error(
-    src_sqlite(":memory:"),
-    "`path` must already exist, unless `create` = TRUE",
-    fixed = TRUE
-  )
 })
 
 test_that("src_tbls() includes all tbls (#4326)", {
@@ -69,4 +16,37 @@ test_that("src_tbls() includes all tbls (#4326)", {
     src_tbls(src_df(env = env(. = iris))),
     "."
   )
+})
+
+# Errors --------------------------------------------
+
+test_that("copy_to() gives meaningful error messages", {
+  skip_if_not_installed("dbplyr")
+
+  verify_output(test_path("test-copy_to-errors.txt"), {
+    "# path does not exist"
+    src_sqlite(":memory:")
+
+    "# requires same source"
+    env <- new.env(parent = emptyenv())
+    env$iris <- iris
+    src_iris <- src_df(env = env)
+
+    src_mtcars <- src_sqlite(":memory:", create = TRUE)
+    copy_to(src_mtcars, mtcars, "mtcars")
+
+    auto_copy(tbl(src_iris, "iris"), src_mtcars, name = "iris")
+    auto_copy(tbl(src_mtcars, "mtcars"), src_iris, name = "mtcars")
+
+    "# src_local errs with pkg/env"
+    src_df("base", new.env())
+    src_df()
+
+    "# only overwrite if overwrite = TRUE"
+    env <- new.env(parent = emptyenv())
+    env$x <- 1
+
+    src_env <- src_df(env = env)
+    copy_to(src_env, tibble(x = 1), name = "x")
+  })
 })
